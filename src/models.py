@@ -32,7 +32,6 @@ def ModelXtoChat_ChatToY(n_class_attr, n_attributes, num_classes, expand_dim):
 def ModelXtoCtoY(n_class_attr, pretrained, freeze, num_classes, use_aux, n_attributes, expand_dim,
                  use_relu, use_sigmoid):
     
-    print('inside of joint model', n_class_attr)
     model1 = inception_v3(pretrained=pretrained, freeze=freeze, num_classes=num_classes, aux_logits=use_aux,
                           n_attributes=n_attributes, bottleneck=True, expand_dim=expand_dim,
                           three_class=(n_class_attr == 3))

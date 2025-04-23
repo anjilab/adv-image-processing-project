@@ -30,3 +30,6 @@ StandardNoBNModel_Seed1/
 StandardNoBNModel_Seed2/
 StandardNoBNModel_Seed3/
 src/pretrained-model/inception_v3_google-1a9a5a14.pth
+best_models_log
+StandardNoBNmodels/
+Joint-models-log

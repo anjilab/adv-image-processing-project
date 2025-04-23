@@ -3,6 +3,7 @@ import numpy as np
 import pdb
 import sys
 import wandb
+import pickle
 
 
 def run_experiments(dataset, args):
@@ -24,10 +25,24 @@ def run_experiments(dataset, args):
     config_dict = vars(arg)
     experiment = args[0].exp
   
-    wandb.init(project="img_processing", config=config_dict, name=f"{experiment}_{arg.seed}_{arg.augmentation_type}")
-    wandb.config.update(arg)
+    # wandb.init(project="img_processing", config=config_dict, name=f"{experiment}_{arg.seed}_{arg.augmentation_type}")
+    # wandb.config.update(arg)
+    
+    # Load the pickle file
+    with open('/home/anjilabudathoki/dip-project/project-2025/src/datasets/CUB_processed/class_attr_data_10/train.pkl', 'rb') as f:
+        data = pickle.load(f)
+
+        # Display the type and number of elements
+        print(f"Type of loaded data: {type(data)}")
+
+        # If it's a list, dictionary, or similar container, get the number of elements
+        if hasattr(data, '__len__'):
+            print(f"Number of elements: {len(data)}")
+        else:
+            print("Loaded object does not have a length (not a container type).")
 
 
+    exit()
     
     if experiment == 'Concept_XtoC':
         # args = args[0]

@@ -12,6 +12,7 @@ from config import BASE_DIR, N_ATTRIBUTES
 from torch.utils.data import BatchSampler
 from torch.utils.data import Dataset, DataLoader
 import csv
+import ast
 
 IMG_DIRECTORY_CUB_200_2011 ="/home/anjilabudathoki/dip-project/project-2025/src/"
 
@@ -246,6 +247,7 @@ def load_data(pkl_paths, use_attr, no_img, batch_size, uncertain_label=False, n_
     else:
         drop_last = False
         shuffle = False
+     # Joint model and all other this is false.
     if resampling:
         sampler = BatchSampler(ImbalancedDatasetSampler(dataset), batch_size=batch_size, drop_last=drop_last)
         loader = DataLoader(dataset, batch_sampler=sampler)
@@ -289,27 +291,42 @@ def find_class_imbalance(pkl_file, multiple_attr=False, attr_idx=-1):
 
 
 class AdversarialImageDataset(Dataset):
-    def __init__(self, img_dir, csv_file, transform=None):
+    def __init__(self, img_dir, csv_file, transform=None, use_attr=False):
         self.img_dir = img_dir
         self.transform = transform
         self.samples = []
+        self.use_attr = use_attr
 
         with open(csv_file, 'r') as f:
             reader = csv.reader(f)
-            self.samples = [(row[0], int(row[1])) for row in reader]
+            if use_attr:
+                self.samples = [(row[0], int(row[1]), row[2]) for row in reader]
+            else:
+                self.samples = [(row[0], int(row[1])) for row in reader]
+                
 
     def __len__(self):
         return len(self.samples)
 
     def __getitem__(self, idx):
-        img_name, label = self.samples[idx]
-        img_path = os.path.join(self.img_dir, img_name)
-        image = Image.open(img_path).convert('RGB')
-        if self.transform:
-            image = self.transform(image)
+        if not self.use_attr:
+            img_name, label = self.samples[idx]
+            img_path = os.path.join(self.img_dir, img_name)
+            image = Image.open(img_path).convert('RGB')
+            if self.transform:
+                image = self.transform(image)
+        if self.use_attr:
+            img_name, label , attr_label = self.samples[idx]
+            img_path = os.path.join(self.img_dir, img_name)
+            image = Image.open(img_path).convert('RGB')
+            if self.transform:
+                image = self.transform(image)
+                
+            return image, label, ast.literal_eval(attr_label)
+
         return image, label
     
-def load_adv_data(resol=299, epsilon=0.01, path_dir_img='', path_csv=""):
+def load_adv_data(resol=299, epsilon=0.01, path_dir_img='', path_csv="", use_attr=False):
     resized_resol = int(resol * 256/224) # we have used inception so resizing image ? 
     transform = transforms.Compose([
             #transforms.Resize((resized_resol, resized_resol)),
@@ -322,10 +339,17 @@ def load_adv_data(resol=299, epsilon=0.01, path_dir_img='', path_csv=""):
     dataset = AdversarialImageDataset(
     img_dir=path_dir_img,
     csv_file=path_csv,
-    transform=transform
+    transform=transform,
+    use_attr=use_attr
     )
+    
+    # For adversarial images files counting
+    adv_path = os.path.join('src/datasets/CUB_processed_adversarial_jointmdl', str(epsilon))
+    num_adv_files = len([f for f in os.listdir(adv_path) if os.path.isfile(os.path.join(adv_path, f))])
+    print(f"Number of adversarial images saved: {num_adv_files}")
 
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=True,  drop_last=drop_last)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=16, shuffle=False,  drop_last=True)
+    print(len(dataloader.dataset), len(dataloader.dataset) == num_adv_files)
     
     return dataloader
     

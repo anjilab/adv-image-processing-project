@@ -13,7 +13,7 @@ __all__ = ['MLP', 'Inception3', 'inception_v3', 'End2EndModel']
 
 model_urls = {
     # Downloaded inception model (optional)
-    'downloaded': 'pretrained/inception_v3_google-1a9a5a14.pth',
+    'downloaded': 'pretrained-model/inception_v3_google-1a9a5a14.pth',
     # Inception v3 ported from TensorFlow
     'inception_v3_google': 'https://download.pytorch.org/models/inception_v3_google-1a9a5a14.pth',
 }
@@ -43,6 +43,7 @@ class End2EndModel(torch.nn.Module):
 
     def forward(self, x):
         if self.first_model.training:
+            # Enters here during joing end2end training
             outputs, aux_outputs = self.first_model(x)
             return self.forward_stage2(outputs), self.forward_stage2(aux_outputs)
         else:
@@ -85,11 +86,13 @@ def inception_v3(pretrained, freeze, **kwargs):
         if 'transform_input' not in kwargs:
             kwargs['transform_input'] = True
         model = Inception3(**kwargs)
-        if os.path.exists(model_urls.get('downloaded')):
-            model.load_partial_state_dict(torch.load(model_urls['downloaded']))
-        else:
-            model.load_partial_state_dict(model_zoo.load_url(model_urls['inception_v3_google']))
-        if freeze:  # only finetune fc layer
+        # if os.path.exists(model_urls.get('downloaded')):
+        #     print('hdfkdhfjdhf')
+        #     exit()
+        #     model.load_partial_state_dict(torch.load(model_urls['downloaded']))
+        # else:
+        model.load_partial_state_dict(model_zoo.load_url(model_urls['inception_v3_google']))
+        if freeze:  # only finetune fc layer, our joint model do not have freeze i.e freeze = False
             for name, param in model.named_parameters():
                 if 'fc' not in name:  # and 'Mixed_7c' not in name:
                     param.requires_grad = False

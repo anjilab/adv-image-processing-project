@@ -20,7 +20,7 @@ from pathlib import Path
 
 K = [1, 3, 5] #top k class accuracies to compute
 
-DEVICE = torch.device('cuda:2')
+DEVICE = torch.device('cuda:4')
 torch.cuda.set_device(DEVICE)
 
 
@@ -109,23 +109,25 @@ def eval(args):
     test_loader = load_data([data_dir], args.use_attr, args.no_img, args.batch_size, image_dir=args.image_dir,
                        n_class_attr=args.n_class_attr, augmentation_type=args.augmentation_type)
     
-    # test_loader = Dataset.
+    print(len(test_loader.dataset), 'fdfjdhfjdhfjha')
     
-    # print('=======================len(dataloader.dataset)========', len(test_loader.dataset))
+    
     epsilons = [0.01, 0.03, 0.1, 0.5]
     criterion = torch.nn.CrossEntropyLoss()
-    epsilon = 0.01
+    epsilon = args.eps
     epsilon_dir = os.path.join(args.adv_imgs_dir, f"{epsilon}")
     path_csv = os.path.join(args.adv_imgs_dir, str(epsilon), "labels.csv")
+    print(path_csv)
     # epsilon_dir_perturbed= os.path.join(args.perturbed_imgs_dir, f"{epsilon}")
-    
     # Load dataset and data loader here
-    test_loader = load_adv_data(path_dir_img=epsilon_dir, path_csv=path_csv)
+    print(args.use_attr, 'jdafjdkjfdklfjdkj')
+    test_loader = load_adv_data(path_dir_img=epsilon_dir, path_csv=path_csv, use_attr=args.use_attr)
+    
 
 
 
-    test_loader = load_data([data_dir], args.use_attr, args.no_img, args.batch_size, image_dir=args.image_dir,
-                       n_class_attr=args.n_class_attr, augmentation_type=args.augmentation_type)
+    # test_loader = load_data([data_dir], args.use_attr, args.no_img, args.batch_size, image_dir=args.image_dir,
+    #                    n_class_attr=args.n_class_attr, augmentation_type=args.augmentation_type)
                 
 
     
@@ -150,8 +152,9 @@ def eval(args):
 
         # inputs_var = torch.autograd.Variable(inputs).cuda()
         # labels_var = torch.autograd.Variable(labels).cuda()
-        inputs_var = torch.autograd.Variable(inputs).to(DEVICE)
-        labels_var = torch.autograd.Variable(labels).to(DEVICE)
+        inputs_var = inputs.to(DEVICE)
+        labels_var = labels.to(DEVICE)
+        
         if args.attribute_group:
             outputs = []
             f = open(args.attribute_group, 'r')
@@ -297,13 +300,11 @@ if __name__ == '__main__':
     parser.add_argument('-augmentation_type', default='standard', help='Augmentation')
     parser.add_argument('-adv_imgs_dir', default='src/datasets/CUB_processed_adversarial', help='Adv image directory')
     parser.add_argument('-perturbed_imgs_dir', default='src/datasets/CUB_processed_adversarial_perturb', help='Perturbed image')
-    
-    
+    parser.add_argument('-eps', default='0.01', help='Epsilon')
     
     args = parser.parse_args()
     args.batch_size = 16
 
-    print(args, 'Arguments')
     
 
 

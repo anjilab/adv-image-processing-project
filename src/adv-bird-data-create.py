@@ -21,7 +21,7 @@ from torch.utils.data import Dataset, DataLoader
 
 K = [1, 3, 5] #top k class accuracies to compute
 
-DEVICE = torch.device('cuda:2')
+DEVICE = torch.device('cuda:3')
 torch.cuda.set_device(DEVICE)
 
 def denormalize(
@@ -118,8 +118,7 @@ def eval(args):
         
     test_loader = load_data([data_dir], args.use_attr, args.no_img, args.batch_size, image_dir=args.image_dir,
                        n_class_attr=args.n_class_attr, augmentation_type=args.augmentation_type)
-    
-    # print('=======================len(dataloader.dataset)========', len(test_loader.dataset))
+
     epsilons = [0.01, 0.03, 0.1, 0.5]
     criterion = torch.nn.CrossEntropyLoss()
         
@@ -131,7 +130,6 @@ def eval(args):
         # Open label CSV files if not already open
         perturbed_labels_file = open(os.path.join(args.perturbed_imgs_dir, str(epsilon), "labels.csv"), mode="a", newline='')
         adv_labels_file = open(os.path.join(args.adv_imgs_dir, str(epsilon), "labels.csv"), mode="a", newline='')
-        print('herere')
         
         perturbed_writer = csv.writer(perturbed_labels_file)
         adv_writer = csv.writer(adv_labels_file)
@@ -152,7 +150,6 @@ def eval(args):
             os.makedirs(epsilon_dir, exist_ok=True)  # Create the directory if it doesn't exist
         count = 0
         for data_idx, data in enumerate(test_loader):
-            
             if args.use_attr:
                 print('Using attribute>>>>>>>>>>>.\n ')
                 if args.no_img:  # A -> Y
@@ -183,20 +180,6 @@ def eval(args):
                     outputs.extend(attr_model(inputs_var))
             else:
                 outputs = model(inputs_var)
-                # print(outputs, '============')
-            
-            # loss = criterion(torch.tensor(outputs), labels_var)
-            # model.zero_grad()
-            # loss.backward()
-            
-            # grad_signs = torch.sign(inputs_var.grad)
-            # # pert_imgs = batch["pixel_values"] + 0.1 * grad_signs
-            # pert_imgs = inputs_var + epsilon * grad_signs
-            # pert_imgs = denormalize(pert_imgs, mean=[0.5, 0.5, 0.5],  std = [2, 2, 2])
-
-            # for img, name, perturbation in zip(pert_imgs, grad_signs):
-            #     torchvision.utils.save_image(perturbation.double(), os.path.join(args.perturbed_imgs_dir, str(epsilon), name))
-            #     torchvision.utils.save_image(img.double(), os.path.join(args.adv_imgs_dir, f"{epsilon}", name))
             
             if args.use_attr: # FOr independent model, it enters here.
                 print('independent -> true')
@@ -260,198 +243,43 @@ def eval(args):
                     model.zero_grad()
                     loss.backward()
                     grad_signs = torch.sign(inputs_var.grad)
-                    # pert_imgs = batch["pixel_values"] + 0.1 * grad_signs
                     pert_imgs = inputs_var + epsilon * grad_signs
                     pert_imgs = denormalize(pert_imgs, mean=[0.5, 0.5, 0.5],  std = [2, 2, 2])
-
-                    for img, perturbation in zip(pert_imgs, grad_signs):
-                        torchvision.utils.save_image(perturbation.double(), os.path.join(args.perturbed_imgs_dir, str(epsilon), f"{count + data_idx}.png"))                        
-                        torchvision.utils.save_image(img.double(), os.path.join(args.adv_imgs_dir, f"{epsilon}", f"{count + data_idx}.png"))
-                        count = count + 1
-                
-                    
-                   
-                    
-                    
+                    for index, (img, perturbation) in enumerate(zip(pert_imgs, grad_signs)):
+                        try:
+                            torchvision.utils.save_image(perturbation.double(), os.path.join(args.perturbed_imgs_dir, str(epsilon), f"{count + data_idx}.png"))                        
+                            torchvision.utils.save_image(img.double(), os.path.join(args.adv_imgs_dir, f"{epsilon}", f"{count + data_idx}.png"))
+                            perturbed_writer.writerow([f"{count + data_idx}.png", labels_var[index].item()])
+                            if args.use_attr:
+                                adv_writer.writerow([f"{count + data_idx}.png", labels_var[index].item(), attr_labels[index].tolist()])
+                            else:
+                                adv_writer.writerow([f"{count + data_idx}.png", labels_var[index].item()])
+                        except Exception as e:
+                            print('error in saving')
+                        count = count + 1 
             else:
                 class_outputs = outputs[0]
                 
-            
-        # # Use below code to make pertubed image
-        # for batch in tqdm(test_loader):
-            
-
-        #     batch["pixel_values"] = batch["pixel_values"].to(DEVICE)
-        #     batch["mask"] = batch["mask"].to(DEVICE)
-        #     batch["attention_mask"] = batch["attention_mask"].to(DEVICE)
-        #     batch["input_ids"] = batch["input_ids"].to(DEVICE)
-
-        #     batch["pixel_values"].requires_grad = True
-
-        #     image_names = batch["image_name"]
-            
-        #     step_out = model.step(batch)
-            
-        #     loss = step_out["loss"]
-        #     model.zero_grad()
-        #     loss.backward()
-        #     grad_signs = torch.sign(batch["pixel_values"].grad)
-        #     # pert_imgs = batch["pixel_values"] + 0.1 * grad_signs
-        #     pert_imgs = batch["pixel_values"] + epsilon * grad_signs
-        #     pert_imgs = denormalize(pert_imgs, mean=cfg["img_mean"], std=cfg["img_std"])
-
-        #     for img, name, perturbation in zip(pert_imgs, image_names, grad_signs):
-        #         torchvision.utils.save_image(perturbation.double(), os.path.join(cfg["perturbed_imgs_dir"], str(epsilon), name))
-        #         torchvision.utils.save_image(img.double(), os.path.join(cfg["adv_imgs_dir"], f"{epsilon}", name))
+                loss = criterion(class_outputs, labels_var)
+                model.zero_grad()
+                loss.backward()
+                grad_signs = torch.sign(inputs_var.grad)
+                # pert_imgs = batch["pixel_values"] + 0.1 * grad_signs
+                pert_imgs = inputs_var + epsilon * grad_signs
+                pert_imgs = denormalize(pert_imgs, mean=[0.5, 0.5, 0.5],  std = [2, 2, 2])
+                for index, (img, perturbation) in enumerate(zip(pert_imgs, grad_signs)):
+                    # print(index, img.shape, perturbation.shape, )
+                    torchvision.utils.save_image(perturbation.double(), os.path.join(args.perturbed_imgs_dir, str(epsilon), f"{count + data_idx}.png"))                        
+                    torchvision.utils.save_image(img.double(), os.path.join(args.adv_imgs_dir, f"{epsilon}", f"{count + data_idx}.png"))
+                    perturbed_writer.writerow([f"{count + data_idx}.png", labels_var[index].item()])
+                    if args.use_attr:
+                        adv_writer.writerow([f"{count + data_idx}.png", labels_var[index].item(), attr_labels[index].item()])
+                    else:
+                        adv_writer.writerow([f"{count + data_idx}.png", labels_var[index].item()])
+                        
+                    count = count + 1
                 
-
-    # all_outputs, all_targets = [], []
-    # all_attr_labels, all_attr_outputs, all_attr_outputs_sigmoid, all_attr_outputs2 = [], [], [], []
-    # all_class_labels, all_class_outputs, all_class_logits = [], [], []
-    # topk_class_labels, topk_class_outputs = [], []
-
-    # for data_idx, data in enumerate(test_loader):
-    #     if args.use_attr:
-    #         if args.no_img:  # A -> Y
-    #             inputs, labels = data
-    #             if isinstance(inputs, list):
-    #                 inputs = torch.stack(inputs).t().float()
-    #             inputs = inputs.float()
-    #             # inputs = torch.flatten(inputs, start_dim=1).float()
-    #         else:
-    #             inputs, labels, attr_labels = data
-    #             attr_labels = torch.stack(attr_labels).t()  # N x 312
-    #     else:  # simple finetune
-    #         inputs, labels = data
-
-    #     # inputs_var = torch.autograd.Variable(inputs).cuda()
-    #     # labels_var = torch.autograd.Variable(labels).cuda()
-    #     inputs_var = torch.autograd.Variable(inputs).to(DEVICE)
-    #     labels_var = torch.autograd.Variable(labels).to(DEVICE)
-    #     if args.attribute_group:
-    #         outputs = []
-    #         f = open(args.attribute_group, 'r')
-    #         for line in f:
-    #             attr_model = torch.load(line.strip())
-    #             outputs.extend(attr_model(inputs_var))
-    #     else:
-    #         outputs = model(inputs_var)
-    #     if args.use_attr:
-    #         if args.no_img:  # A -> Y
-    #             class_outputs = outputs
-    #         else:
-    #             if args.bottleneck:
-    #                 if args.use_relu:
-    #                     attr_outputs = [torch.nn.ReLU()(o) for o in outputs]
-    #                     attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs]
-    #                 elif args.use_sigmoid:
-    #                     attr_outputs = [torch.nn.Sigmoid()(o) for o in outputs]
-    #                     attr_outputs_sigmoid = attr_outputs
-    #                 else:
-    #                     attr_outputs = outputs
-    #                     attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs]
-    #                 if model2:
-    #                     stage2_inputs = torch.cat(attr_outputs, dim=1)
-    #                     class_outputs = model2(stage2_inputs)
-    #                 else:  # for debugging bottleneck performance without running stage 2
-    #                     class_outputs = torch.zeros([inputs.size(0), N_CLASSES],
-    #                                                 dtype=torch.float64).cuda()  # ignore this
-    #             else:  # cotraining, end2end
-    #                 if args.use_relu:
-    #                     attr_outputs = [torch.nn.ReLU()(o) for o in outputs[1:]]
-    #                     attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs[1:]]
-    #                 elif args.use_sigmoid:
-    #                     attr_outputs = [torch.nn.Sigmoid()(o) for o in outputs[1:]]
-    #                     attr_outputs_sigmoid = attr_outputs
-    #                 else:
-    #                     attr_outputs = outputs[1:]
-    #                     attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs[1:]]
-
-    #                 class_outputs = outputs[0]
-    #             for i in range(args.n_attributes):
-    #                 acc = binary_accuracy(attr_outputs_sigmoid[i].squeeze(), attr_labels[:, i])
-    #                 acc = acc.data.cpu().numpy()
-    #                 # acc = accuracy(attr_outputs_sigmoid[i], attr_labels[:, i], topk=(1,))
-    #                 attr_acc_meter[0].update(acc, inputs.size(0))
-    #                 if args.feature_group_results:  # keep track of accuracy of individual attributes
-    #                     attr_acc_meter[i + 1].update(acc, inputs.size(0))
-
-    #             attr_outputs = torch.cat([o.unsqueeze(1) for o in attr_outputs], dim=1)
-    #             attr_outputs_sigmoid = torch.cat([o for o in attr_outputs_sigmoid], dim=1)
-    #             all_attr_outputs.extend(list(attr_outputs.flatten().data.cpu().numpy()))
-    #             all_attr_outputs_sigmoid.extend(list(attr_outputs_sigmoid.flatten().data.cpu().numpy()))
-    #             all_attr_labels.extend(list(attr_labels.flatten().data.cpu().numpy()))
-    #     else:
-    #         class_outputs = outputs[0]
-
-    #     _, topk_preds = class_outputs.topk(max(K), 1, True, True)
-    #     _, preds = class_outputs.topk(1, 1, True, True)
-    #     all_class_outputs.extend(list(preds.detach().cpu().numpy().flatten()))
-    #     all_class_labels.extend(list(labels.data.cpu().numpy()))
-    #     all_class_logits.extend(class_outputs.detach().cpu().numpy())
-    #     topk_class_outputs.extend(topk_preds.detach().cpu().numpy())
-    #     topk_class_labels.extend(labels.view(-1, 1).expand_as(preds))
-
-    #     np.set_printoptions(threshold=sys.maxsize)
-    #     class_acc = accuracy(class_outputs, labels, topk=K)  # only class prediction accuracy
-        
-    #     for m in range(len(class_acc_meter)):
-    #         class_acc_meter[m].update(class_acc[m], inputs.size(0))
-
-    # all_class_logits = np.vstack(all_class_logits)
-    # topk_class_outputs = np.vstack(topk_class_outputs)
-    # topk_class_labels = np.vstack(topk_class_labels)
-    # wrong_idx = np.where(np.sum(topk_class_outputs == topk_class_labels, axis=1) == 0)[0]
-
-    # for j in range(len(K)):
-    #     print('Average top %d class accuracy: %.5f' % (K[j], class_acc_meter[j].avg))
-
-    # if args.use_attr and not args.no_img:  # print some metrics for attribute prediction performance
-    #     print('Average attribute accuracy: %.5f' % attr_acc_meter[0].avg)
-    #     all_attr_outputs_int = np.array(all_attr_outputs_sigmoid) >= 0.5
-    #     if args.feature_group_results:
-    #         n = len(all_attr_labels)
-    #         all_attr_acc, all_attr_f1 = [], []
-    #         for i in range(args.n_attributes):
-    #             acc_meter = attr_acc_meter[1 + i]
-    #             attr_acc = float(acc_meter.avg)
-    #             attr_preds = [all_attr_outputs_int[j] for j in range(n) if j % args.n_attributes == i]
-    #             attr_labels = [all_attr_labels[j] for j in range(n) if j % args.n_attributes == i]
-    #             attr_f1 = f1_score(attr_labels, attr_preds)
-    #             all_attr_acc.append(attr_acc)
-    #             all_attr_f1.append(attr_f1)
-
-    #         '''
-    #         fig, axs = plt.subplots(1, 2, figsize=(20,10))
-    #         for plt_id, values in enumerate([all_attr_acc, all_attr_f1]):
-    #             axs[plt_id].set_xticks(np.arange(0, 1.1, 0.1))
-    #             if plt_id == 0:
-    #                 axs[plt_id].hist(np.array(values)/100.0, bins=np.arange(0, 1.1, 0.1), rwidth=0.8)
-    #                 axs[plt_id].set_title("Attribute accuracies distribution")
-    #             else:
-    #                 axs[plt_id].hist(values, bins=np.arange(0, 1.1, 0.1), rwidth=0.8)
-    #                 axs[plt_id].set_title("Attribute F1 scores distribution")
-    #         plt.savefig('/'.join(args.model_dir.split('/')[:-1]) + '.png')
-    #         '''
-    #         bins = np.arange(0, 1.01, 0.1)
-    #         acc_bin_ids = np.digitize(np.array(all_attr_acc) / 100.0, bins)
-    #         acc_counts_per_bin = [np.sum(acc_bin_ids == (i + 1)) for i in range(len(bins))]
-    #         f1_bin_ids = np.digitize(np.array(all_attr_f1), bins)
-    #         f1_counts_per_bin = [np.sum(f1_bin_ids == (i + 1)) for i in range(len(bins))]
-    #         print("Accuracy bins:")
-    #         print(acc_counts_per_bin)
-    #         print("F1 bins:")
-    #         print(f1_counts_per_bin)
-    #         np.savetxt(os.path.join(args.log_dir, 'concepts.txt'), f1_counts_per_bin)
-
-    #     balanced_acc, report = multiclass_metric(all_attr_outputs_int, all_attr_labels)
-    #     f1 = f1_score(all_attr_labels, all_attr_outputs_int)
-    #     print("Total 1's predicted:", sum(np.array(all_attr_outputs_sigmoid) >= 0.5) / len(all_attr_outputs_sigmoid))
-    #     print('Avg attribute balanced acc: %.5f' % (balanced_acc))
-    #     print("Avg attribute F1 score: %.5f" % f1)
-    #     print(report + '\n')
-    # return class_acc_meter, attr_acc_meter, all_class_labels, topk_class_outputs, all_class_logits, all_attr_labels, all_attr_outputs, all_attr_outputs_sigmoid, wrong_idx, all_attr_outputs2
-
+                
 if __name__ == '__main__':
     torch.backends.cudnn.benchmark=True
     parser = argparse.ArgumentParser(description='PyTorch Training')
@@ -479,22 +307,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.batch_size = 16
 
-    print(args, 'Arguments')
     y_results, c_results = [], []
     for i, model_dir in enumerate(args.model_dirs):
         args.model_dir = model_dir
         args.model_dir2 = args.model_dirs2[i] if args.model_dirs2 else None
         result = eval(args)
-        # class_acc_meter, attr_acc_meter = result[0], result[1]
-        # y_results.append(1 - class_acc_meter[0].avg[0].item() / 100.)
-        # if attr_acc_meter is not None:
-        #     c_results.append(1 - attr_acc_meter[0].avg.item() / 100.)
-        # else:
-        #     c_results.append(-1)
-    # values = (np.mean(y_results), np.std(y_results), np.mean(c_results), np.std(c_results))
-    # output_string = '%.4f %.4f %.4f %.4f' % values
-    # print_string = 'Error of y: %.4f +- %.4f, Error of C: %.4f +- %.4f' % values
-    # print(print_string)
-    # os.makedirs(args.log_dir, exist_ok=True)
-    # output = open(os.path.join(args.log_dir, 'results.txt'), 'w')
-    # output.write(output_string)

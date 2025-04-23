@@ -33,3 +33,30 @@ Optimizer =  SGD
 # Some confusion i had while understanding code
 1. i pushed to cuda:2 but still the cpu usage was skyrocketing why ? 
 
+# tasks
+Joint model use adversarail 
+COMPOSITE LOSS 
+
+adversarial image create by using independent models
+
+3 different adv image create.
+
+
+TASKS: 
+1. Joint Model train train, val accuracy => train and validation might be same check. =>DONE checked issue fixed, choosen joint model with 0.001 as now adversarial image creation
+2. 3 different set of adversarial example
+ - Concept = 0
+ - Task = 0 
+ - concept + task loss  => main  [ADV IMAGE CREATION ON THE PROCESS]
+3. Evaluation of joint model on the adversarial dataset. 
+4. Check joint model y error and c error. 
+
+Result interpretation:
+Precision: For class 1: if it is 0.59 means of all the times model predicted 1, how many times is actually 1. Avoid false positive
+Recall: For class 1: if it sis 0.50, of all the actual ones, how many times did the model actually predicted 1. Helps in minority class. 
+
+My models precision:
+for class 0 = 0.88, class 1 = 0.59. This means model is leaning towards class 0. 
+F1 score = 0.54, means that model is missing class 1 cases and not super confident.  
+
+
