@@ -10,6 +10,7 @@ import numpy as np
 from sklearn.metrics import f1_score
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import tqdm
+import wandb
 
 from dataset import load_adv_data, load_data
 from config import BASE_DIR, N_CLASSES, N_ATTRIBUTES
@@ -277,6 +278,13 @@ def eval(args):
         print('Avg attribute balanced acc: %.5f' % (balanced_acc))
         print("Avg attribute F1 score: %.5f" % f1)
         print(report + '\n')
+        wandb.log({
+            f"avg{K[j]}": class_acc_meter[j].avg,
+            "attr_acc_meter": attr_acc_meter[0].avg,
+            "total_1": sum(np.array(all_attr_outputs_sigmoid) >= 0.5) / len(all_attr_outputs_sigmoid),
+            "avg_attr_balanced_acc": (balanced_acc),
+            "f1": f1
+})
     return class_acc_meter, attr_acc_meter, all_class_labels, topk_class_outputs, all_class_logits, all_attr_labels, all_attr_outputs, all_attr_outputs_sigmoid, wrong_idx, all_attr_outputs2
 
 if __name__ == '__main__':
@@ -304,6 +312,9 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     args.batch_size = 16
+    config_dict = vars(args)
+    wandb.init(project="img_processing", config=config_dict, name=f"joint_results_inference_test_dataset")
+    wandb.config.update(config_dict)
 
     
 
@@ -322,6 +333,13 @@ if __name__ == '__main__':
         else:
             c_results.append(-1)
     values = (np.mean(y_results), np.std(y_results), np.mean(c_results), np.std(c_results))
+    wandb.log({
+        'error_y': np.mean(y_results),
+        'std_y': np.std(y_results),
+        'error_c':  np.mean(c_results),
+        'std_c': np.std(c_results)
+        
+        })
     output_string = '%.4f %.4f %.4f %.4f' % values
     print_string = 'Error of y: %.4f +- %.4f, Error of C: %.4f +- %.4f' % values
     print(print_string)

@@ -30,10 +30,12 @@ def get_params_info(model1, freeze, n_attributes, expand_dim ):
     print(f"Number of trainable parameters of model2 mlp: {num_trainable_params}") # 22600
 
 
-def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_criterion, args, is_training):
+def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_criterion, args, is_training,device=DEVICE):
     """
     For the rest of the networks (X -> A, cotraining, simple finetune)
     """
+    if not device:
+        device  = DEVICE
     if is_training:
         model.train()
     else:
@@ -57,15 +59,16 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
             
             # attr_labels_var = torch.autograd.Variable(attr_labels).float()
             attr_labels_var = attr_labels.float().requires_grad_()
-            attr_labels_var = attr_labels_var.to(DEVICE)
+            attr_labels_var = attr_labels_var.to(device)
             # attr_labels_var = attr_labels_var.cuda() if torch.cuda.is_available() else attr_labels_var
 
         # inputs_var = torch.autograd.Variable(inputs)
         # inputs_var = inputs_var.cuda() if torch.cuda.is_available() else inputs_var
         # labels_var = torch.autograd.Variable(labels)
         # labels_var = labels_var.cuda() if torch.cuda.is_available() else labels_var
-        inputs_var = inputs.to(DEVICE)
-        labels_var = labels.to(DEVICE)
+        print(device)
+        inputs_var = inputs.to(device)
+        labels_var = labels.to(device)
        
 
         if is_training and args.use_aux:
@@ -83,8 +86,8 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
             if attr_criterion is not None and args.attr_loss_weight > 0: #X -> A, cotraining, end2end
                 # Joint enters here tooo
                 for i in range(len(attr_criterion)):
-                    losses.append(args.attr_loss_weight * (1.0 * attr_criterion[i](outputs[i+out_start].squeeze().to(DEVICE).float(), attr_labels_var[:, i]) \
-                                                            + 0.4 * attr_criterion[i](aux_outputs[i+out_start].squeeze().to(DEVICE).float(), attr_labels_var[:, i])))
+                    losses.append(args.attr_loss_weight * (1.0 * attr_criterion[i](outputs[i+out_start].squeeze().to(device).float(), attr_labels_var[:, i]) \
+                                                            + 0.4 * attr_criterion[i](aux_outputs[i+out_start].squeeze().to(device).float(), attr_labels_var[:, i])))
         else: #testing or no aux logits
             outputs = model(inputs_var)
             losses = []
@@ -148,6 +151,9 @@ def train_X_to_C_to_y(args):
     
     
 def train(model, args):
+    if args.device:
+        DEVICE = torch.device(args.device)
+        torch.cuda.set_device(DEVICE)
     # Determine imbalance
     imbalance = None
     if args.use_attr and not args.no_img and args.weighted_loss:
@@ -212,11 +218,11 @@ def train(model, args):
     for epoch in range(0, args.epochs):
         train_loss_meter = AverageMeter()
         train_acc_meter = AverageMeter()
-        train_loss_meter, train_acc_meter = run_epoch(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, attr_criterion, args, is_training=True) 
+        train_loss_meter, train_acc_meter = run_epoch(model, optimizer, train_loader, train_loss_meter, train_acc_meter, criterion, attr_criterion, args, is_training=True, device=args.device) 
         val_loss_meter = AverageMeter()
         val_acc_meter = AverageMeter()
         with torch.no_grad():
-            val_loss_meter, val_acc_meter = run_epoch(model, optimizer, val_loader, val_loss_meter, val_acc_meter, criterion, attr_criterion, args, is_training=False)
+            val_loss_meter, val_acc_meter = run_epoch(model, optimizer, val_loader, val_loss_meter, val_acc_meter, criterion, attr_criterion, args, is_training=False, device=args.device)
 
 
         if best_val_acc < val_acc_meter.avg:

@@ -19,6 +19,10 @@ import wandb
 DEVICE = torch.device('cuda:2')
 torch.cuda.set_device(DEVICE)
 
+# WHile running the code of inference.report.sh use cuda:4 in other just comment below 2 lines
+DEVICE = torch.device('cuda:4')
+torch.cuda.set_device(DEVICE)
+
 def eval(args):
     """
     Run inference using model (and model2 if bottleneck)

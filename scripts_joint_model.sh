@@ -1,6 +1,7 @@
 # ### Joint Model
 
 
+
 # # python3 src/jointmodelexp.py cub Joint --seed 1 -ckpt 1 -log_dir Joint-models-log/Joint0.001Model_Seed1/outputs/ -e 5 -optimizer sgd -pretrained -use_aux -use_attr -weighted_loss multiple -data_dir src/datasets/CUB_processed/class_attr_data_10 -n_attributes 112 -attr_loss_weight 0.001 -normalize_loss -b 64 -weight_decay 0.00004 -lr 0.01 -scheduler_step 20 -end2end
 # python3 src/inference.py -model_dirs Joint-models-log/Joint0.001Model_Seed1/outputs/best_model_1.pth  -eval_data test -use_attr -n_attributes 112 -data_dir src/datasets/CUB_processed/class_attr_data_10 -log_dir  Joint-models-log/Joint0.001Model/outputs
 # #### Concept loss weight = 0.001
