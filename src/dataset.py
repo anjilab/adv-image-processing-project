@@ -203,7 +203,6 @@ def load_data(pkl_paths, use_attr, no_img, batch_size, uncertain_label=False, n_
                 transforms.Normalize(mean=[0.5]*3, std=[2]*3)
             ])
         elif augmentation_type == 'custom':
-            # Define your own custom sequence of transforms
             transform = transforms.Compose([
                 transforms.RandomPerspective(distortion_scale=0.5, p=0.5),
                 transforms.ColorJitter(contrast=0.5),
