@@ -8,7 +8,7 @@ from jointmodel_train import train_X_to_C_to_y
 
 
 def get_info_on_train_test_val_pkl():
-    with open('/home/anjilabudathoki/dip-project/project-2025/src/datasets/CUB_processed/class_attr_data_10/train.pkl', 'rb') as f:
+    with open('/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/datasets/CUB_processed/class_attr_data_10/train.pkl', 'rb') as f:
         data = pickle.load(f)
         print(f"Type of loaded data: {type(data)}")
 
@@ -17,7 +17,7 @@ def get_info_on_train_test_val_pkl():
         else:
             print("Loaded object does not have a length (not a container type).")
             
-    with open('/home/anjilabudathoki/dip-project/project-2025/src/datasets/CUB_processed/class_attr_data_10/val.pkl', 'rb') as f:
+    with open('/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/datasets/CUB_processed/class_attr_data_10/val.pkl', 'rb') as f:
         data = pickle.load(f)
         print(f"Type of loaded data: {type(data)}")
 
@@ -26,7 +26,7 @@ def get_info_on_train_test_val_pkl():
         else:
             print("Loaded object does not have a length (not a container type).")\
                 
-    with open('/home/anjilabudathoki/dip-project/project-2025/src/datasets/CUB_processed/class_attr_data_10/test.pkl', 'rb') as f:
+    with open('/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/datasets/CUB_processed/class_attr_data_10/test.pkl', 'rb') as f:
         data = pickle.load(f)
         print(f"Type of loaded data: {type(data)}")
         if hasattr(data, '__len__'):

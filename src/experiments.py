@@ -29,7 +29,7 @@ def run_experiments(dataset, args):
     # wandb.config.update(arg)
     
     # Load the pickle file
-    with open('/home/anjilabudathoki/dip-project/project-2025/src/datasets/CUB_processed/class_attr_data_10/train.pkl', 'rb') as f:
+    with open('/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/datasets/CUB_processed/class_attr_data_10/train.pkl', 'rb') as f:
         data = pickle.load(f)
 
         # Display the type and number of elements

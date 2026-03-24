@@ -391,7 +391,7 @@ def parse_arguments(experiment):
                             help='Whether to use concepts as auxiliary features (in multitasking) to predict Y')
         
         parser.add_argument('-augmentation_type', default='standard', help='Different image processing technique')
-        parser.add_argument('-device', default='standard', help='Device')
+        parser.add_argument('-device', default='cuda:4', help='Device')
         
         args = parser.parse_args()
         args.three_class = (args.n_class_attr == 3)

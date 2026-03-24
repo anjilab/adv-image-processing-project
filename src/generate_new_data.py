@@ -23,7 +23,7 @@ torch.cuda.set_device(DEVICE)
 
 
 
-IMG_DIRECTORY_CUB_200_2011 ="/home/anjilabudathoki/dip-project/project-2025/src/"
+IMG_DIRECTORY_CUB_200_2011 ="/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/"
 
 
 def get_few_shot_data(n_samples, out_dir, data_file='train.pkl'):

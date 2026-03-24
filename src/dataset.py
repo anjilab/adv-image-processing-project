@@ -14,7 +14,8 @@ from torch.utils.data import Dataset, DataLoader
 import csv
 import ast
 
-IMG_DIRECTORY_CUB_200_2011 ="/home/anjilabudathoki/dip-project/project-2025/src/"
+IMG_DIRECTORY_CUB_200_2011 ="/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/"
+
 
 class CUBDataset(Dataset):
     """

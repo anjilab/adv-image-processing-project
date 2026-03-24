@@ -66,7 +66,7 @@ def run_epoch(model, optimizer, loader, loss_meter, acc_meter, criterion, attr_c
         # inputs_var = inputs_var.cuda() if torch.cuda.is_available() else inputs_var
         # labels_var = torch.autograd.Variable(labels)
         # labels_var = labels_var.cuda() if torch.cuda.is_available() else labels_var
-        print(device)
+        # print(device)
         inputs_var = inputs.to(device)
         labels_var = labels.to(device)
        

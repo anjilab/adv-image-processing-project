@@ -33,3 +33,8 @@ src/pretrained-model/inception_v3_google-1a9a5a14.pth
 best_models_log
 StandardNoBNmodels/
 Joint-models-log
+CUB_processed.tar.gz
+CUB_200_2011.tgz
+pretrained.tar.gz
+
+src/__pycache__/

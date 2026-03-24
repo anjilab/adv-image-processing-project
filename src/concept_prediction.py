@@ -14,7 +14,7 @@ from torch.utils.data import BatchSampler
 from torch.utils.data import Dataset, DataLoader
 import csv
 
-IMG_DIRECTORY_CUB_200_2011 ="/home/anjilabudathoki/dip-project/project-2025/src/"
+IMG_DIRECTORY_CUB_200_2011 ="/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/"
 
 
 class CUBDataset(Dataset):
@@ -158,7 +158,7 @@ def get_data(pkl_paths, use_attr, no_img, batch_size, uncertain_label=False, n_c
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
     return loader
 
-DATA_DIR = '/home/anjilabudathoki/dip-project/project-2025/src/datasets/CUB_processed/class_attr_data_10'
+DATA_DIR = '/media/drive2/anjilabudathoki/codes/adv-image-processing-project/src/datasets/CUB_processed/class_attr_data_10'
 train_data_path = os.path.join(BASE_DIR, DATA_DIR, 'train.pkl')
 val_data_path = train_data_path.replace('train.pkl', 'val.pkl')
 
