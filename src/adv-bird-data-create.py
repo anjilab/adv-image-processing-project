@@ -192,26 +192,37 @@ def eval(args):
                         print('Use relu ?: ', args.use_relu)
                         print('Use sigmoid ?: ', args.use_sigmoid)
                         
-                        
-                        if args.use_relu:
-                            attr_outputs = [torch.nn.ReLU()(o) for o in outputs]
-                            attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs]
-                        elif args.use_sigmoid:
-                            attr_outputs = [torch.nn.Sigmoid()(o) for o in outputs]
-                            attr_outputs_sigmoid = attr_outputs
+                        # Check if outputs is a list (from End2EndModel) with class output at index 0
+                        if isinstance(outputs, list) and len(outputs) > args.n_attributes:
+                            # End2EndModel format: [class_output, attr1, attr2, ..., attrN]
+                            if args.use_relu:
+                                attr_outputs = [torch.nn.ReLU()(o) for o in outputs[1:]]
+                                attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs[1:]]
+                            elif args.use_sigmoid:
+                                attr_outputs = [torch.nn.Sigmoid()(o) for o in outputs[1:]]
+                                attr_outputs_sigmoid = attr_outputs
+                            else:
+                                attr_outputs = outputs[1:]
+                                attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs[1:]]
+                            class_outputs = outputs[0]
                         else:
-                            attr_outputs = outputs
-                            attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs]
-                        if model2:
-                            print('Independent')
-                            stage2_inputs = torch.cat(attr_outputs, dim=1)
-                            class_outputs = model2(stage2_inputs)
-                        
-                
-                            
-                        else:  # for debugging bottleneck performance without running stage 2
-                            class_outputs = torch.zeros([inputs.size(0), N_CLASSES],
-                                                        dtype=torch.float64).cuda()  # ignore this
+                            # Independent model format: just attribute outputs
+                            if args.use_relu:
+                                attr_outputs = [torch.nn.ReLU()(o) for o in outputs]
+                                attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs]
+                            elif args.use_sigmoid:
+                                attr_outputs = [torch.nn.Sigmoid()(o) for o in outputs]
+                                attr_outputs_sigmoid = attr_outputs
+                            else:
+                                attr_outputs = outputs
+                                attr_outputs_sigmoid = [torch.nn.Sigmoid()(o) for o in outputs]
+                            if model2:
+                                print('Independent')
+                                stage2_inputs = torch.cat(attr_outputs, dim=1)
+                                class_outputs = model2(stage2_inputs)
+                            else:  # for debugging bottleneck performance without running stage 2
+                                class_outputs = torch.zeros([inputs.size(0), N_CLASSES],
+                                                            dtype=torch.float64).cuda()  # ignore this
                     else:  # cotraining, end2end
                         if args.use_relu:
                             attr_outputs = [torch.nn.ReLU()(o) for o in outputs[1:]]

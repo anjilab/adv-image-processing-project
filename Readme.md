@@ -54,7 +54,7 @@ To reproduce the results shown in report.
 ## Reproducing Results
 
 1. Run `bash scripts_joint_model.sh` to execute the training process and generate results without adversarial attacks
-2. Run `bash adv_scripts.sh` to create the adversarial dataset (requires completing step 1 first)
+2. Run `bash adv_scripts.sh` to create the adversarial dataset (requires completing step 1 first) Be careful in running this experiments as they are creating adversarial image and perturbation added to the image. You will get the folder inside datasets.
 3. Run `bash inference_report.sh` to generate analysis results for different configurations and the original model (ensure model outputs exist before running)
 
 
