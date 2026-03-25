@@ -19,7 +19,6 @@ This architecture allows for better interpretability and intervention capabiliti
 - Train and evaluate joint concept bottleneck models on bird species classification
 - Generate adversarial examples using various attack techniques
 - Analyze model robustness against adversarial perturbations
-- Compare performance of different model architectures (independent, sequential, and joint models)
 - Evaluate the impact of adversarial attacks on both concept prediction and final classification accuracy
 
 
