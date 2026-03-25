@@ -1,3 +1,7 @@
+### Project Log Readme
+
+This document is purely for learning purpose, documented while doing research.
+
 # Steps
 1. I copied all the folders from CUB to my folders. 
 2. Then create new script file as run_command_2025.sh

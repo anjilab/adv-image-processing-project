@@ -1,5 +1,5 @@
 # # THis is the main model we are using.
-# python3 src/inference.py -model_dirs Joint-models-log/Joint0.001Model_Seed1/outputs/best_model_1.pth Joint-models-log/Joint0.001Model_Seed2/outputs/best_model_2.pth Joint-models-log/Joint0.001Model_Seed3/outputs/best_model_3.pth -eval_data test -use_attr -n_attributes 112 -data_dir src/datasets/CUB_processed/class_attr_data_10 -log_dir Joint-models-log/Joint0.001Model/outputs/no-adv
+python3 src/inference.py -model_dirs Joint-models-log/Joint0.001Model_Seed1/outputs/best_model_1.pth Joint-models-log/Joint0.001Model_Seed2/outputs/best_model_2.pth Joint-models-log/Joint0.001Model_Seed3/outputs/best_model_3.pth -eval_data test -use_attr -n_attributes 112 -data_dir src/datasets/CUB_processed/class_attr_data_10 -log_dir Joint-models-log/Joint0.001Model/outputs/no-adv
 # This works but just for 2 models with 0.01
 # python3 src/inference.py -model_dirs Joint-models-log/Joint0.01Model__Seed1/outputs/best_model_1.pth Joint-models-log/Joint0.01Model__Seed2/outputs/best_model_2.pth -eval_data test -use_attr -n_attributes 112 -data_dir src/datasets/CUB_processed/class_attr_data_10 -log_dir Joint-models-log/Joint0.01Model/outputs/no-adv
 
